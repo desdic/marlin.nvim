@@ -1,0 +1,241 @@
+==============================================================================
+------------------------------------------------------------------------------
+Marlin is a plugin for quickly navigating in buffers of interest
+
+------------------------------------------------------------------------------
+Usage ~
+Example using the lazy plugin manager
+
+   "desdic/marlin.nvim",
+   opts = {},
+   config = function(_, opts)
+       local marlin = require("marlin")
+       marlin.setup(opts)
+
+       local keymap = vim.keymap.set
+       keymap("n", "<Leader>fa", function() marlin.add() end, {  desc = "add file" })
+       keymap("n", "<Leader>fd", function() marlin.remove() end, {  desc = "remove file" })
+       keymap("n", "<Leader>fx", function() marlin.remove_all() end, {  desc = "remove all for current project" })
+       keymap("n", "<Leader>f]", function() marlin.move_up() end, {  desc = "move up" })
+       keymap("n", "<Leader>f[", function() marlin.move_down() end, {  desc = "move down" })
+       keymap("n", "<Leader>fs", function() marlin.sort() end, {  desc = "sort" })
+       keymap("n", "<Leader>0", function() marlin.open_all() end, {  desc = "open all" })
+
+       for index = 1,4 do
+           keymap("n", "<Leader>"..index, function() marlin.open(index) end, {  desc = "goto "..index })
+       end
+   end
+
+
+------------------------------------------------------------------------------
+                                                                        *marlin*
+                                    `marlin`
+Class ~
+{marlin.commands}
+Fields ~
+{add} `(fun(filename?: string): nil)` -- add file
+{cur_index} `(fun(): number)` -- get index of current file
+{get_indexes} `(fun(): marlin.file[])` -- get indexes
+{move} `(fun(table: marlin.file[], direction: marlin.movefun): nil)`
+{move_down} `(fun(): nil)` -- move index down
+{move_up} `(fun(): nil)` -- move index up
+{num_indexes} `(fun(): number)` -- get number of indexes
+{open} `(fun(index: number, opts: any?): nil)` -- open index
+{open_all} `(fun(): nil)`
+{remove} `(fun(filename?: string): nil)` -- remove current file
+{remove_all} `(fun(): nil)` -- clear all indexes
+{setup} `(fun(opts: marlin.config): nil)` -- setup
+{sort} `(fun(sort_func?: fun(table: marlin.file[])): nil)` -- sorting
+
+------------------------------------------------------------------------------
+Class ~
+{marlin.file}
+Fields ~
+{col} `(number)`
+{row} `(number)`
+{filename} `(string)`
+
+------------------------------------------------------------------------------
+                                                                       *default*
+                                   `default`
+Class ~
+{marlin.config}
+Fields ~
+{patterns} `(optional)` `(string[])` patterns to detect root of project
+{datafile} `(optional)` `(string)` location of datafile
+{open_callback} `(optional)` `(fun(bufnr: number, opts: any?))` function to set current buffer
+{sorter} `(optional)` `(fun(table: marlin.file[]))` sort function
+Default config
+>
+  local default = {
+      patterns = { ".git", ".svn" },
+      datafile = vim.fn.stdpath("data") .. "/marlin.json",
+      open_callback = callbacks.change_buffer,
+      sorter = sorter.by_buffer,
+  }
+<
+
+------------------------------------------------------------------------------
+                                                                  *marlin.add()*
+                            `marlin.add`({filename})
+Add a file
+
+Parameters ~
+{filename} `(optional)` `(string)` -- optional filename
+
+Usage ~
+`require('marlin').add()`
+
+------------------------------------------------------------------------------
+                                                            *marlin.cur_index()*
+                              `marlin.cur_index`()
+Return index for current filename
+
+Return ~
+`(number)` retuns current index and 0 if not found
+
+Usage ~
+`require('marlin').cur_index()`
+
+------------------------------------------------------------------------------
+                                                          *marlin.get_indexes()*
+                             `marlin.get_indexes`()
+Returns list of indexes
+
+Return ~
+marlin.file[] returns indexes
+
+Usage ~
+`require('marlin').get_indexes()`
+
+------------------------------------------------------------------------------
+                                                                 *marlin.move()*
+                      `marlin.move`({table}, {direction})
+Generic move function for moving indexes
+
+Parameters ~
+{table} `(string[])` index table
+{direction} `(fun(table: marlin.file[], cur_index: number, num_indexes: number))`
+
+------------------------------------------------------------------------------
+                                                            *marlin.move_down()*
+                              `marlin.move_down`()
+Move current index down
+
+Usage ~
+`require('marlin').move_down()`
+
+------------------------------------------------------------------------------
+                                                              *marlin.move_up()*
+                               `marlin.move_up`()
+Move current index up
+
+Usage ~
+`require('marlin').move_up()`
+
+------------------------------------------------------------------------------
+                                                          *marlin.num_indexes()*
+                             `marlin.num_indexes`()
+Return number of indexes for current project
+
+Return ~
+`(number)` returns number of indexes in current project
+
+Usage ~
+`require('marlin').num_indexes()`
+
+------------------------------------------------------------------------------
+                                                                 *marlin.open()*
+                         `marlin.open`({index}, {opts})
+Open index
+
+Parameters ~
+{index} `(number)` index to load
+{opts} `(any?)` optional options to open_callback
+
+Usage ~
+`require('marlin').open(<index>)`
+
+------------------------------------------------------------------------------
+                                                             *marlin.open_all()*
+                              `marlin.open_all`()
+Open all indexes
+
+Usage ~
+`require('marlin').open_all()`
+
+------------------------------------------------------------------------------
+                                                               *marlin.remove()*
+                          `marlin.remove`({filename})
+Remove index
+
+Parameters ~
+{filename} `(optional)` `(string)` -- optional filename
+
+Usage ~
+`require('marlin').remove()`
+
+------------------------------------------------------------------------------
+                                                           *marlin.remove_all()*
+                             `marlin.remove_all`()
+Remove all indexes for current project
+
+Usage ~
+`require('marlin').remove_all()`
+
+------------------------------------------------------------------------------
+                                                                *marlin.setup()*
+                             `marlin.setup`({opts})
+Setup (required)
+
+Parameters ~
+{opts} `(optional)` marlin.config
+
+Usage ~
+`require('marlin').setup()`
+
+------------------------------------------------------------------------------
+                                                                 *marlin.sort()*
+                           `marlin.sort`({sort_func})
+Sort indexes
+
+Parameters ~
+{sort_func} `(optional)` `(fun(table: marlin.file[]))` optional sort function else default
+
+Usage ~
+`require('marlin').sort()`
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                             *M.change_buffer()*
+                        `M.change_buffer`({bufnr}, {_})
+Parameters ~
+{bufnr} `(number)` buffer id
+
+------------------------------------------------------------------------------
+                                                                 *M.use_split()*
+                          `M.use_split`({bufnr}, {_})
+Parameters ~
+{bufnr} `(number)` buffer id
+
+
+==============================================================================
+------------------------------------------------------------------------------
+                                                                 *M.by_buffer()*
+                           `M.by_buffer`({filelist})
+Sort indexes by open buffers (Same order like bufferline shows them)
+
+Parameters ~
+{filelist} marlin.file[]
+
+------------------------------------------------------------------------------
+                                                                   *M.by_name()*
+                            `M.by_name`({filelist})
+Sort indexes by path + filename
+
+Parameters ~
+{filelist} marlin.file[]
+
+
+ vim:tw=78:ts=8:noet:ft=help:norl:
