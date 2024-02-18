@@ -1,12 +1,15 @@
-local M = {}
+--- Marlin callbacks
+
+-- Module definition ==========================================================
+local callbacks = {}
 
 ---@param bufnr number buffer id
-M.change_buffer = function(bufnr, _)
+callbacks.change_buffer = function(bufnr, _)
     vim.api.nvim_set_current_buf(bufnr)
 end
 
 ---@param bufnr number buffer id
-M.use_split = function(bufnr, _)
+callbacks.use_split = function(bufnr, _)
     local wins = vim.api.nvim_tabpage_list_wins(0)
     for _, win in ipairs(wins) do
         local winbufnr = vim.api.nvim_win_get_buf(win)
@@ -20,4 +23,4 @@ M.use_split = function(bufnr, _)
     vim.api.nvim_set_current_buf(bufnr)
 end
 
-return M
+return callbacks

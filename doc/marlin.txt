@@ -208,30 +208,36 @@ Usage ~
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                             *M.change_buffer()*
-                        `M.change_buffer`({bufnr}, {_})
+Marlin callbacks
+
+------------------------------------------------------------------------------
+                                                     *callbacks.change_buffer()*
+                    `callbacks.change_buffer`({bufnr}, {_})
 Parameters ~
 {bufnr} `(number)` buffer id
 
 ------------------------------------------------------------------------------
-                                                                 *M.use_split()*
-                          `M.use_split`({bufnr}, {_})
+                                                         *callbacks.use_split()*
+                      `callbacks.use_split`({bufnr}, {_})
 Parameters ~
 {bufnr} `(number)` buffer id
 
 
 ==============================================================================
 ------------------------------------------------------------------------------
-                                                                 *M.by_buffer()*
-                           `M.by_buffer`({filelist})
+Marlin sorters
+
+------------------------------------------------------------------------------
+                                                           *sorters.by_buffer()*
+                        `sorters.by_buffer`({filelist})
 Sort indexes by open buffers (Same order like bufferline shows them)
 
 Parameters ~
 {filelist} marlin.file[]
 
 ------------------------------------------------------------------------------
-                                                                   *M.by_name()*
-                            `M.by_name`({filelist})
+                                                             *sorters.by_name()*
+                         `sorters.by_name`({filelist})
 Sort indexes by path + filename
 
 Parameters ~

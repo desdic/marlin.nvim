@@ -1,7 +1,5 @@
-M.by_buffer()	marlin.txt	/*M.by_buffer()*
-M.by_name()	marlin.txt	/*M.by_name()*
-M.change_buffer()	marlin.txt	/*M.change_buffer()*
-M.use_split()	marlin.txt	/*M.use_split()*
+callbacks.change_buffer()	marlin.txt	/*callbacks.change_buffer()*
+callbacks.use_split()	marlin.txt	/*callbacks.use_split()*
 default	marlin.txt	/*default*
 marlin	marlin.txt	/*marlin*
 marlin.add()	marlin.txt	/*marlin.add()*
@@ -17,3 +15,5 @@ marlin.remove()	marlin.txt	/*marlin.remove()*
 marlin.remove_all()	marlin.txt	/*marlin.remove_all()*
 marlin.setup()	marlin.txt	/*marlin.setup()*
 marlin.sort()	marlin.txt	/*marlin.sort()*
+sorters.by_buffer()	marlin.txt	/*sorters.by_buffer()*
+sorters.by_name()	marlin.txt	/*sorters.by_name()*

@@ -1,11 +1,14 @@
-local M = {}
+--- Marlin sorters
+
+-- Module definition ==========================================================
+local sorters = {}
 
 local utils = require("marlin.utils")
 
 --- Sort indexes by open buffers (Same order like bufferline shows them)
 ---
 ---@param filelist marlin.file[]
-M.by_buffer = function(filelist)
+sorters.by_buffer = function(filelist)
     local index = 1
     for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
         if vim.fn.getbufinfo(bufnr)[1].listed == 1 then
@@ -27,10 +30,10 @@ end
 --- Sort indexes by path + filename
 ---
 ---@param filelist marlin.file[]
-M.by_name = function(filelist)
+sorters.by_name = function(filelist)
     table.sort(filelist, function(a, b)
         return a.filename > b.filename
     end)
 end
 
-return M
+return sorters
