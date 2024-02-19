@@ -12,8 +12,14 @@ M.read_config = function(datafile)
     return {}
 end
 
-M.save_data = function(datafile, project, localdata)
-    local data = M.read_config(datafile)
+M.save_data = function(opts, project, localdata)
+    if project == nil then
+        if not opts.suppress.missing_root then
+            vim.notify("project root not found, check FAQ")
+        end
+        return
+    end
+    local data = M.read_config(opts.datafile)
     data[project] = localdata
 
     -- If we have no more files we remove the project
@@ -22,9 +28,9 @@ M.save_data = function(datafile, project, localdata)
     end
 
     local content = vim.fn.json_encode(data)
-    local fd = io.open(datafile, "w")
+    local fd = io.open(opts.datafile, "w")
     if not fd then
-        vim.notify("Unable to open " .. datafile .. " for write")
+        vim.notify("Unable to open " .. opts.datafile .. " for write")
         return
     end
 

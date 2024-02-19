@@ -72,6 +72,9 @@ Default config
       datafile = vim.fn.stdpath("data") .. "/marlin.json",
       open_callback = callbacks.change_buffer,
       sorter = sorter.by_buffer,
+      suppress = {
+          missing_root = false
+      }
   }
 <
 

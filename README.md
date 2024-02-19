@@ -38,6 +38,9 @@ local default = {
     datafile = vim.fn.stdpath("data") .. "/marlin.json", -- location of data file
     open_callback = callbacks.change_buffer -- default way to open buffer
     sorter = sorter.by_buffer -- sort by bufferid
+    suppress = {
+        missing_root = false -- don't give warning on project root not found
+    }
 }
 ```
 
@@ -125,6 +128,10 @@ When I first saw harpoon I was immediately hooked but I missed a few key feature
  - I wanted persistent jumps per project and not per directory.
 
 Like anyone else missing a feature I created a patch but it seems that many other did the same.
+
+### Issues/Feature request
+
+[FAQ](FAQ.md) might have what you are looking, but pull request are also welcome.
 
 ### Credits
 

@@ -64,6 +64,9 @@ local default = {
     datafile = vim.fn.stdpath("data") .. "/marlin.json",
     open_callback = callbacks.change_buffer,
     sorter = sorter.by_buffer,
+    suppress = {
+        missing_root = false,
+    },
 }
 --minidoc_afterlines_end
 
@@ -74,7 +77,7 @@ end
 
 local save = function(m)
     vim.schedule(function()
-        datafile.save_data(m.opts.datafile, m.project_path, m.project_files)
+        datafile.save_data(m.opts, m.project_path, m.project_files)
     end)
 end
 
