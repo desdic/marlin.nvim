@@ -153,7 +153,7 @@ Example using telescope
                 previewer = conf.grep_previewer({}),
                 sorter = conf.generic_sorter({}),
                 attach_mappings = function(_, map)
-                    map("i", "d", function(bufnr)
+                    map("i", "<c-d>", function(bufnr)
                         local current_picker = action_state.get_current_picker(bufnr)
                         current_picker:delete_selection(function(selection)
                             require("marlin").remove(selection.filename)
