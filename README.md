@@ -120,6 +120,52 @@ But they can also be change if you want to write your own sorter.
 
 Choice is yours
 
+### But there is no UI
+
+Correct. I'm not planning on creating a UI but if you really want one you can easily create it.
+
+Example using telescope
+
+```lua
+    vim.keymap.set("n", "<Leader>fx", function()
+        local conf = require("telescope.config").values
+        local action_state = require("telescope.actions.state")
+        local results = require("marlin").get_indexes()
+
+        local index = 0
+        require("telescope.pickers")
+            .new({}, {
+                prompt_title = "Marlin",
+                finder = require("telescope.finders").new_table({
+                    results = results,
+                    entry_maker = function(entry)
+                        index = index + 1
+                        return {
+                            value = entry,
+                            ordinal = index ..":" .. entry.filename,
+                            lnum = entry.row,
+                            col = entry.col + 1,
+                            filename = entry.filename,
+                            display = index .. ":" .. entry.filename .. ":" .. entry.row .. ":" .. entry.col,
+                        }
+                    end,
+                }),
+                previewer = conf.grep_previewer({}),
+                sorter = conf.generic_sorter({}),
+                attach_mappings = function(_, map)
+                    map("i", "d", function(bufnr)
+                        local current_picker = action_state.get_current_picker(bufnr)
+                        current_picker:delete_selection(function(selection)
+                            require("marlin").remove(selection.filename)
+                        end)
+                    end)
+                    return true
+                end,
+            })
+            :find()
+    end, { desc = "Telescope marlin" })
+```
+
 ### Why yet another ..
 
 When I first saw harpoon I was immediately hooked but I missed a few key features.
