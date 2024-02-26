@@ -72,7 +72,7 @@ local default = {
 
 local get_cursor = function()
     local cursor = vim.api.nvim_win_get_cursor(0)
-    return cursor[1] or 1, cursor[2] or 0
+    return cursor[1], cursor[2]
 end
 
 local save = function(m)
@@ -327,7 +327,7 @@ marlin.setup = function(opts)
     end
 
     local augroup = vim.api.nvim_create_augroup("marlin", {})
-    vim.api.nvim_create_autocmd({ "BufLeave", "VimLeavePre" }, {
+    vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
         group = augroup,
         pattern = "*",
         callback = function(_)
