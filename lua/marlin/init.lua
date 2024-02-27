@@ -28,9 +28,9 @@
 ---@field add fun(filename?: string): nil -- add file
 ---@field cur_index fun(): number -- get index of current file
 ---@field get_indexes fun(): marlin.file[] -- get indexes
----@field move fun(table: marlin.file[], direction: marlin.movefun): nil
----@field move_down fun(): nil -- move index down
----@field move_up fun(): nil -- move index up
+---@field move fun(table: marlin.file[], direction: marlin.movefun, filename?: string): nil
+---@field move_down fun(filename?: string): nil -- move index down
+---@field move_up fun(filename?: string): nil -- move index up
 ---@field num_indexes fun(): number -- get number of indexes
 ---@field open fun(index: number, opts: any?): nil -- open index
 ---@field open_all fun(): nil
@@ -182,17 +182,34 @@ marlin.get_indexes = function()
     return marlin.project_files["files"]
 end
 
+--- Return index of a filename
+---
+---@param filename string
+---
+---@return number|nil returns index of file or nil
+---
+---@usage `require("marlin").get_fileindex("/full/path/to/filename")`
+marlin.get_fileindex = function(filename)
+    if filename then
+        for idx, data in ipairs(marlin.project_files["files"]) do
+            if data["filename"] == filename then
+                return idx
+            end
+        end
+    end
+    return nil
+end
 --- Generic move function for moving indexes
 ---
 ---@param table string[] index table
 ---@param direction marlin.movefun
-marlin.move = function(table, direction)
+marlin.move = function(table, direction, filename)
     local indexes = marlin.num_indexes()
     if indexes < 2 then
         return
     end
 
-    local cur_index = marlin.cur_index()
+    local cur_index = marlin.get_fileindex(filename) or marlin.cur_index()
     direction(table, cur_index, indexes)
 end
 
@@ -217,15 +234,15 @@ end
 --- Move current index down
 ---
 ---@usage `require('marlin').move_down()`
-marlin.move_down = function()
-    marlin.move(marlin.project_files["files"], down)
+marlin.move_down = function(filename)
+    marlin.move(marlin.project_files["files"], down, filename)
 end
 
 --- Move current index up
 ---
 ---@usage `require('marlin').move_up()`
-marlin.move_up = function()
-    marlin.move(marlin.project_files["files"], up)
+marlin.move_up = function(filename)
+    marlin.move(marlin.project_files["files"], up, filename)
 end
 
 --- Return number of indexes for current project
