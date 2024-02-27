@@ -127,29 +127,33 @@ Correct. I'm not planning on creating a UI but if you really want one you can ea
 Example using telescope
 
 ```lua
+    local mindex = 0
+    local generate_finder = function()
+        mindex = 0
+        return require("telescope.finders").new_table({
+            results = require("marlin").get_indexes(),
+            entry_maker = function(entry)
+                mindex = mindex + 1
+                return {
+                    value = entry,
+                    ordinal = mindex .. ":" .. entry.filename,
+                    lnum = entry.row,
+                    col = entry.col + 1,
+                    filename = entry.filename,
+                    display = mindex .. ":" .. entry.filename .. ":" .. entry.row .. ":" .. entry.col,
+                }
+            end,
+        })
+    end
+
     vim.keymap.set("n", "<Leader>fx", function()
         local conf = require("telescope.config").values
         local action_state = require("telescope.actions.state")
-        local results = require("marlin").get_indexes()
 
-        local index = 0
         require("telescope.pickers")
             .new({}, {
                 prompt_title = "Marlin",
-                finder = require("telescope.finders").new_table({
-                    results = results,
-                    entry_maker = function(entry)
-                        index = index + 1
-                        return {
-                            value = entry,
-                            ordinal = index ..":" .. entry.filename,
-                            lnum = entry.row,
-                            col = entry.col + 1,
-                            filename = entry.filename,
-                            display = index .. ":" .. entry.filename .. ":" .. entry.row .. ":" .. entry.col,
-                        }
-                    end,
-                }),
+                finder = generate_finder(),
                 previewer = conf.grep_previewer({}),
                 sorter = conf.generic_sorter({}),
                 attach_mappings = function(_, map)
@@ -158,6 +162,18 @@ Example using telescope
                         current_picker:delete_selection(function(selection)
                             require("marlin").remove(selection.filename)
                         end)
+                    end)
+                    map("i", "+", function(bufnr)
+                        local current_picker = action_state.get_current_picker(bufnr)
+                        local selection = current_picker:get_selection()
+                        require("marlin").move_up(selection.filename)
+                        current_picker:refresh(generate_finder(), {})
+                    end)
+                    map("i", "-", function(bufnr)
+                        local current_picker = action_state.get_current_picker(bufnr)
+                        local selection = current_picker:get_selection()
+                        require("marlin").move_down(selection.filename)
+                        current_picker:refresh(generate_finder(), {})
                     end)
                     return true
                 end,
