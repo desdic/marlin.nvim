@@ -38,6 +38,7 @@
 ---@field remove_all fun(): nil -- clear all indexes
 ---@field setup fun(opts: marlin.config): nil -- setup
 ---@field sort fun(sort_func?: fun(table: marlin.file[])): nil -- sorting
+---@field load_project_files fun(): nil -- load project files
 local marlin = {}
 
 ---@class marlin.file
@@ -323,17 +324,10 @@ marlin.remove_all = function()
     marlin.project_files["files"] = {}
 end
 
---- Setup (required)
----
----@param opts? marlin.config
----
----@usage `require('marlin').setup()`
-marlin.setup = function(opts)
-    marlin.opts = vim.tbl_deep_extend("force", default, opts or {})
-
-    -- Load project specific data
-    marlin.project_path = search_for_project_path(marlin.opts.patterns)
-
+--- load project files
+marlin.load_project_files = function()
+    local project_path = search_for_project_path(marlin.opts.patterns)
+    marlin.project_path = project_path
     marlin.project_files = {}
     local data = datafile.read_config(marlin.opts.datafile)
     for key, value in pairs(data) do
@@ -342,6 +336,17 @@ marlin.setup = function(opts)
             break
         end
     end
+end
+
+--- Setup (required)
+---
+---@param opts? marlin.config
+---
+---@usage `require('marlin').setup()`
+marlin.setup = function(opts)
+    marlin.opts = vim.tbl_deep_extend("force", default, opts or {})
+    -- Load project specific data
+    marlin.load_project_files()
 
     local augroup = vim.api.nvim_create_augroup("marlin", {})
     vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
