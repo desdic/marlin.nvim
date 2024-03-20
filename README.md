@@ -38,6 +38,7 @@ local default = {
     datafile = vim.fn.stdpath("data") .. "/marlin.json", -- location of data file
     open_callback = callbacks.change_buffer -- default way to open buffer
     sorter = sorter.by_buffer -- sort by bufferid
+    save_cursor_location = true
     suppress = {
         missing_root = false -- don't give warning on project root not found
     }
