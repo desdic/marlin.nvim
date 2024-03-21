@@ -65,6 +65,7 @@ local default = {
     datafile = vim.fn.stdpath("data") .. "/marlin.json",
     open_callback = callbacks.change_buffer,
     sorter = sorter.by_buffer,
+    save_cursor_location = true,
     suppress = {
         missing_root = false,
     },
@@ -348,14 +349,21 @@ marlin.setup = function(opts)
     -- Load project specific data
     marlin.load_project_files()
 
+    if not marlin.opts.save_cursor_location then
+        return
+    end
+    
     local augroup = vim.api.nvim_create_augroup("marlin", {})
-    vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
-        group = augroup,
-        pattern = "*",
-        callback = function(_)
-            update_location(marlin)
-        end,
-    })
+    vim.api.nvim_create_autocmd(
+        { "CursorMoved", "BufLeave", "VimLeavePre" },
+        {
+            group = augroup,
+            pattern = "*",
+            callback = function(_)
+                update_location(marlin)
+            end,
+        }
+    )
 end
 --- Sort indexes
 ---
