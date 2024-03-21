@@ -354,18 +354,15 @@ marlin.setup = function(opts)
     if not marlin.opts.save_cursor_location then
         return
     end
-    
+
     local augroup = vim.api.nvim_create_augroup("marlin", {})
-    vim.api.nvim_create_autocmd(
-        { "CursorMoved", "BufLeave", "VimLeavePre" },
-        {
-            group = augroup,
-            pattern = "*",
-            callback = function(_)
-                update_location(marlin)
-            end,
-        }
-    )
+    vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
+        group = augroup,
+        pattern = "*",
+        callback = function(_)
+            update_location(marlin)
+        end,
+    })
 end
 --- Sort indexes
 ---
