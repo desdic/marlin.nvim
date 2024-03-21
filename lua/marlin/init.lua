@@ -278,10 +278,12 @@ marlin.open = function(index, opts)
     marlin.opts.open_callback(bufnr, opts)
 
     if set_position then
-        vim.api.nvim_win_set_cursor(0, {
-            cur_item.row or 1,
-            cur_item.col or 0,
-        })
+        pcall(function()
+            vim.api.nvim_win_set_cursor(0, {
+                cur_item.row or 1,
+                cur_item.col or 0,
+            })
+        end)
     end
 end
 
