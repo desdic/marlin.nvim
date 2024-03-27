@@ -16,6 +16,9 @@
 ---        keymap("n", "<Leader>f[", function() marlin.move_down() end, {  desc = "move down" })
 ---        keymap("n", "<Leader>fs", function() marlin.sort() end, {  desc = "sort" })
 ---        keymap("n", "<Leader>0", function() marlin.open_all() end, {  desc = "open all" })
+---        keymap("n", "<Leader>fn", function() marlin.next() end, {  desc = "open next index" })
+---        keymap("n", "<Leader>fp", function() marlin.prev() end, {  desc = "open previous index" })
+---        keymap("n", "<Leader><Leader>", function() marlin.toggle() end, {  desc = "toggle cur/last open index" })
 ---
 ---        for index = 1,4 do
 ---            keymap("n", "<Leader>"..index, function() marlin.open(index) end, {  desc = "goto "..index })
@@ -33,7 +36,10 @@
 ---@field move_up fun(filename?: string): nil -- move index up
 ---@field num_indexes fun(): number -- get number of indexes
 ---@field open fun(index: number, opts: any?): nil -- open index
----@field open_all fun(): nil
+---@field next fun(opts: any?): nil -- open next
+---@field prev fun(opts: any?): nil -- open previous
+---@field toggle fun(opts: any?): nil -- toggle between cur and last opened index
+---@field open_all fun(opts: any?): nil
 ---@field remove fun(filename?: string): nil -- remove current file
 ---@field remove_all fun(): nil -- clear all indexes
 ---@field setup fun(opts: marlin.config): nil -- setup
@@ -52,6 +58,20 @@ local callbacks = require("marlin.callbacks")
 local sorter = require("marlin.sorters")
 local datafile = require("marlin.datafile")
 local utils = require("marlin.utils")
+
+-- Small optimizations
+local vim_schedule = vim.schedule
+local vim_api_nvim_win_get_cursor = vim.api.nvim_win_get_cursor
+local vim_api_nvim_win_set_cursor = vim.api.nvim_win_set_cursor
+local utils_is_empty = utils.is_empty
+local utils_get_cur_filename = utils.get_cur_filename
+local utils_swap = utils.swap
+local utils_load_buffer = utils.load_buffer
+local utils_get_project_path = utils.get_project_path
+local datafile_save_data = datafile.save_data
+local datafile_read_config = datafile.read_config
+local table_remove = table.remove
+local table_insert = table.insert
 
 ---@class marlin.config
 ---@field patterns? string[] patterns to detect root of project
@@ -73,19 +93,19 @@ local default = {
 --minidoc_afterlines_end
 
 local get_cursor = function()
-    local cursor = vim.api.nvim_win_get_cursor(0)
+    local cursor = vim_api_nvim_win_get_cursor(0)
     return cursor[1], cursor[2]
 end
 
 local save = function(m)
-    vim.schedule(function()
-        datafile.save_data(m.opts, m.project_path, m.project_files)
+    vim_schedule(function()
+        datafile_save_data(m.opts, m.project_path, m.project_files)
     end)
 end
 
-local update_location = function(m)
-    local cur_filename = utils.get_cur_filename()
-    if utils.is_empty(cur_filename) then
+local update_location = function(m, event)
+    local cur_filename = utils_get_cur_filename()
+    if utils_is_empty(cur_filename) then
         return
     end
 
@@ -94,20 +114,28 @@ local update_location = function(m)
     end
 
     local row, col = get_cursor()
+
+    local project_files = m.project_files
+    local save_cursor_location = m.opts.save_cursor_location
+
     for idx, data in ipairs(m.get_indexes()) do
         if data["filename"] == cur_filename then
-            m.project_files["files"][idx]["col"] = col
-            m.project_files["files"][idx]["row"] = row
-            break
+            if event == "BufLeave" then
+                m.last = idx
+            end
+            if save_cursor_location then
+                project_files["files"][idx]["col"] = col
+                project_files["files"][idx]["row"] = row
+                save(m)
+            end
+            return
         end
     end
-
-    save(m)
 end
 
 local search_for_project_path = function(patterns)
     for _, pattern in ipairs(patterns) do
-        local match = utils.get_project_path(pattern)
+        local match = utils_get_project_path(pattern)
         if match ~= nil then
             return match
         end
@@ -121,8 +149,8 @@ end
 ---
 ---@usage `require('marlin').add()`
 marlin.add = function(filename)
-    filename = filename or utils.get_cur_filename()
-    if utils.is_empty(filename) then
+    filename = filename or utils_get_cur_filename()
+    if utils_is_empty(filename) then
         return
     end
 
@@ -131,15 +159,20 @@ marlin.add = function(filename)
     end
 
     local row, col = get_cursor()
+
     for idx, data in ipairs(marlin.get_indexes()) do
         if data["filename"] == filename then
             marlin.project_files["files"][idx]["col"] = col
             marlin.project_files["files"][idx]["row"] = row
+
+            -- if save_cursor_location is false we need to update the col, row
+            save(marlin)
             return
         end
     end
 
-    table.insert(marlin.project_files["files"], {
+    -- File wasn't previously added so we add it
+    table_insert(marlin.project_files["files"], {
         filename = filename,
         col = col,
         row = row,
@@ -154,8 +187,8 @@ end
 ---
 ---@usage `require('marlin').cur_index()`
 marlin.cur_index = function()
-    local cur_filename = utils.get_cur_filename()
-    if utils.is_empty(cur_filename) then
+    local cur_filename = utils_get_cur_filename()
+    if utils_is_empty(cur_filename) then
         return 0
     end
 
@@ -217,20 +250,20 @@ end
 
 local up = function(table, cur_index, indexes)
     if cur_index == 1 then
-        utils.swap(table, cur_index, indexes)
+        utils_swap(table, cur_index, indexes)
         return
     end
 
-    utils.swap(table, cur_index, cur_index - 1)
+    utils_swap(table, cur_index, cur_index - 1)
 end
 
 local down = function(table, cur_index, indexes)
     if cur_index == indexes then
-        utils.swap(table, 1, cur_index)
+        utils_swap(table, 1, cur_index)
         return
     end
 
-    utils.swap(marlin.project_files["files"], cur_index, cur_index + 1)
+    utils_swap(marlin.project_files["files"], cur_index, cur_index + 1)
 end
 
 --- Move current index down
@@ -268,20 +301,26 @@ end
 ---@usage `require('marlin').open(<index>)`
 marlin.open = function(index, opts)
     local idx = tonumber(index)
-    if idx > marlin.num_indexes() then
+    if idx > marlin.num_indexes() or index < 1 then
         return
     end
+
+    -- local cur = marlin.cur_index()
 
     opts = opts or {}
 
     local cur_item = marlin.project_files["files"][idx]
-    local bufnr, set_position = utils.load_buffer(cur_item.filename)
+    local bufnr, set_position = utils_load_buffer(cur_item.filename)
+
+    -- if cur ~=0 and idx ~= cur then
+    --     marlin.last = cur
+    -- end
 
     marlin.opts.open_callback(bufnr, opts)
 
     if set_position then
         pcall(function()
-            vim.api.nvim_win_set_cursor(0, {
+            vim_api_nvim_win_set_cursor(0, {
                 cur_item.row or 1,
                 cur_item.col or 0,
             })
@@ -289,12 +328,55 @@ marlin.open = function(index, opts)
     end
 end
 
+--- Toggle between current and last open index
+---
+---@param opts any? optional options to open_callback
+---
+---@usage `require('marlin').next()`
+marlin.toggle = function(opts)
+    marlin.open(marlin.last, opts)
+end
+
+--- Open next index
+---
+---@param opts any? optional options to open_callback
+---
+---@usage `require('marlin').next()`
+marlin.next = function(opts)
+    local index = marlin.cur_index() + 1
+    if index > marlin.num_indexes() then
+        index = 1
+    end
+    opts = opts or {}
+    marlin.open(index, opts)
+end
+
+--- Open previous index
+---
+---@param opts any? optional options to open_callback
+---
+---@usage `require('marlin').prev()`
+marlin.prev = function(opts)
+    local index = marlin.cur_index() - 1
+
+    local max = marlin.num_indexes()
+    if index < 1 then
+        index = max
+    end
+    opts = opts or {}
+    marlin.open(index, opts)
+end
+
 --- Open all indexes
 ---
+---@param opts any? optional options to open_callback
+---
 ---@usage `require('marlin').open_all()`
-marlin.open_all = function()
+marlin.open_all = function(opts)
+    opts = opts or {}
+    local marlinopen = marlin.open
     for idx, _ in ipairs(marlin.get_indexes()) do
-        marlin.open(idx)
+        marlinopen(idx, opts)
     end
 end
 
@@ -304,14 +386,14 @@ end
 ---
 ---@usage `require('marlin').remove()`
 marlin.remove = function(filename)
-    filename = filename or utils.get_cur_filename()
+    filename = filename or utils_get_cur_filename()
     if utils.is_empty(filename) or not marlin.project_files["files"] then
         return
     end
 
     for idx, data in ipairs(marlin.project_files["files"]) do
         if data["filename"] == filename then
-            table.remove(marlin.project_files["files"], idx)
+            table_remove(marlin.project_files["files"], idx)
 
             save(marlin)
 
@@ -332,7 +414,7 @@ marlin.load_project_files = function()
     local project_path = search_for_project_path(marlin.opts.patterns)
     marlin.project_path = project_path
     marlin.project_files = {}
-    local data = datafile.read_config(marlin.opts.datafile)
+    local data = datafile_read_config(marlin.opts.datafile)
     for key, value in pairs(data) do
         if key == marlin.project_path then
             marlin.project_files = value
@@ -351,16 +433,18 @@ marlin.setup = function(opts)
     -- Load project specific data
     marlin.load_project_files()
 
-    if not marlin.opts.save_cursor_location then
-        return
-    end
+    marlin.last = 1
+
+    -- if not marlin.opts.save_cursor_location then
+    --     return
+    -- end
 
     local augroup = vim.api.nvim_create_augroup("marlin", {})
     vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
         group = augroup,
         pattern = "*",
-        callback = function(_)
-            update_location(marlin)
+        callback = function(ev)
+            update_location(marlin, ev.event)
         end,
     })
 end

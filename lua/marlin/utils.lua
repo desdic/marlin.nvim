@@ -1,7 +1,13 @@
 local M = {}
 
+local vim_fn_bufnr = vim.fn.bufnr
+local vim_api_nvim_buf_is_loaded = vim.api.nvim_buf_is_loaded
+local vim_fn_bufload = vim.fn.bufload
+local vim_api_nvim_set_option_value = vim.api.nvim_set_option_value
+local vim_fn_expand = vim.fn.expand
+
 M.get_cur_filename = function()
-    return vim.fn.expand("%:p")
+    return vim_fn_expand("%:p")
 end
 
 M.get_project_path = function(patterns)
@@ -20,17 +26,17 @@ end
 M.load_buffer = function(filename)
     local set_position = false
     -- Check if file already in a buffer
-    local bufnr = vim.fn.bufnr(filename)
+    local bufnr = vim_fn_bufnr(filename)
     if bufnr == -1 then
         -- else create a buffer for it
-        bufnr = vim.fn.bufnr(filename, true)
+        bufnr = vim_fn_bufnr(filename, true)
         set_position = true
     end
 
     -- if the file is not loaded, load it and make it listed (visible)
-    if not vim.api.nvim_buf_is_loaded(bufnr) then
-        vim.fn.bufload(bufnr)
-        vim.api.nvim_set_option_value("buflisted", true, {
+    if not vim_api_nvim_buf_is_loaded(bufnr) then
+        vim_fn_bufload(bufnr)
+        vim_api_nvim_set_option_value("buflisted", true, {
             buf = bufnr,
         })
     end
