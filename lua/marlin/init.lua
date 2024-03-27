@@ -98,9 +98,7 @@ local get_cursor = function()
 end
 
 local save = function(m)
-    vim_schedule(function()
-        datafile_save_data(m.opts, m.project_path, m.project_files)
-    end)
+    datafile_save_data(m.opts, m.project_path, m.project_files)
 end
 
 local update_location = function(m, event)
