@@ -60,7 +60,6 @@ local datafile = require("marlin.datafile")
 local utils = require("marlin.utils")
 
 -- Small optimizations
-local vim_schedule = vim.schedule
 local vim_api_nvim_win_get_cursor = vim.api.nvim_win_get_cursor
 local vim_api_nvim_win_set_cursor = vim.api.nvim_win_set_cursor
 local utils_is_empty = utils.is_empty
