@@ -45,6 +45,7 @@
 ---@field setup fun(opts: marlin.config): nil -- setup
 ---@field sort fun(sort_func?: fun(table: marlin.file[])): nil -- sorting
 ---@field load_project_files fun(): nil -- load project files
+---@field save fun(): nil -- force a save
 local marlin = {}
 
 ---@class marlin.file
@@ -96,10 +97,6 @@ local get_cursor = function()
     return cursor[1], cursor[2]
 end
 
-local save = function(m)
-    datafile_save_data(m.opts, m.project_path, m.project_files)
-end
-
 local update_location = function(m, event)
     local cur_filename = utils_get_cur_filename()
     if utils_is_empty(cur_filename) then
@@ -123,7 +120,6 @@ local update_location = function(m, event)
             if save_cursor_location then
                 project_files["files"][idx]["col"] = col
                 project_files["files"][idx]["row"] = row
-                save(m)
             end
             return
         end
@@ -138,6 +134,13 @@ local search_for_project_path = function(patterns)
         end
     end
     return nil
+end
+
+--- Force save (Save is normally done when quitting)
+---
+---@usage `require('marlin').save()`
+marlin.save = function()
+    datafile_save_data(marlin.opts, marlin.project_path, marlin.project_files)
 end
 
 --- Add a file
@@ -161,9 +164,6 @@ marlin.add = function(filename)
         if data["filename"] == filename then
             marlin.project_files["files"][idx]["col"] = col
             marlin.project_files["files"][idx]["row"] = row
-
-            -- if save_cursor_location is false we need to update the col, row
-            save(marlin)
             return
         end
     end
@@ -174,8 +174,6 @@ marlin.add = function(filename)
         col = col,
         row = row,
     })
-
-    save(marlin)
 end
 
 --- Return index for current filename
@@ -392,8 +390,6 @@ marlin.remove = function(filename)
         if data["filename"] == filename then
             table_remove(marlin.project_files["files"], idx)
 
-            save(marlin)
-
             break
         end
     end
@@ -432,16 +428,20 @@ marlin.setup = function(opts)
 
     marlin.last = 1
 
-    -- if not marlin.opts.save_cursor_location then
-    --     return
-    -- end
-
     local augroup = vim.api.nvim_create_augroup("marlin", {})
-    vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave", "VimLeavePre" }, {
+    vim.api.nvim_create_autocmd({ "CursorMoved", "BufLeave" }, {
         group = augroup,
         pattern = "*",
         callback = function(ev)
             update_location(marlin, ev.event)
+        end,
+    })
+
+    vim.api.nvim_create_autocmd({ "VimLeavePre" }, {
+        group = augroup,
+        pattern = "*",
+        callback = function(_)
+            marlin.save()
         end,
     })
 end
