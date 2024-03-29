@@ -1,13 +1,14 @@
 local M = {}
 
+local uv = vim.loop
+
 M.read_config = function(datafile)
-    if vim.fn.filereadable(datafile) ~= 0 then
-        local fd = io.open(datafile, "r")
-        if fd then
-            local content = fd:read("*a")
-            io.close(fd)
-            return vim.fn.json_decode(content)
-        end
+    local fd = uv.fs_open(datafile, "r", 438)
+    if fd then
+        local stat = uv.fs_fstat(fd)
+        local data = uv.fs_read(fd, stat.size, 0)
+        uv.fs_close(fd)
+        return vim.fn.json_decode(data)
     end
     return {}
 end
@@ -19,6 +20,7 @@ M.save_data = function(opts, project, localdata)
         end
         return
     end
+
     local data = M.read_config(opts.datafile)
     data[project] = localdata
 
@@ -28,14 +30,15 @@ M.save_data = function(opts, project, localdata)
     end
 
     local content = vim.fn.json_encode(data)
-    local fd = io.open(opts.datafile, "w")
+
+    local fd = uv.fs_open(opts.datafile, "w", 438)
     if not fd then
         vim.notify("Unable to open " .. opts.datafile .. " for write")
         return
     end
 
-    fd:write(content)
-    io.close(fd)
+    uv.fs_write(fd, content)
+    uv.fs_close(fd)
 end
 
 return M
