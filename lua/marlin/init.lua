@@ -103,10 +103,6 @@ local update_location = function(m, event)
         return
     end
 
-    if not m.project_files["files"] then
-        m.project_files["files"] = {}
-    end
-
     local row, col = get_cursor()
 
     local project_files = m.project_files
@@ -154,10 +150,6 @@ marlin.add = function(filename)
         return
     end
 
-    if not marlin.project_files["files"] then
-        marlin.project_files["files"] = {}
-    end
-
     local row, col = get_cursor()
 
     for idx, data in ipairs(marlin.get_indexes()) do
@@ -187,10 +179,6 @@ marlin.cur_index = function()
         return 0
     end
 
-    if not marlin.project_files["files"] then
-        marlin.project_files["files"] = {}
-    end
-
     for idx, data in ipairs(marlin.project_files["files"]) do
         if data["filename"] == cur_filename then
             return idx
@@ -205,10 +193,6 @@ end
 ---
 ---@usage `require('marlin').get_indexes()`
 marlin.get_indexes = function()
-    if marlin.num_indexes() == 0 then
-        return {}
-    end
-
     return marlin.project_files["files"]
 end
 
@@ -281,10 +265,6 @@ end
 ---
 ---@usage `require('marlin').num_indexes()`
 marlin.num_indexes = function()
-    if not marlin.project_files["files"] then
-        return 0
-    end
-
     return #marlin.project_files["files"]
 end
 
@@ -300,27 +280,21 @@ marlin.open = function(index, opts)
         return
     end
 
-    -- local cur = marlin.cur_index()
-
-    opts = opts or {}
-
     local cur_item = marlin.project_files["files"][idx]
     local bufnr, set_position = utils_load_buffer(cur_item.filename)
 
-    -- if cur ~=0 and idx ~= cur then
-    --     marlin.last = cur
-    -- end
+    marlin.opts.open_callback(bufnr, opts or {})
 
-    marlin.opts.open_callback(bufnr, opts)
-
-    if set_position then
-        pcall(function()
-            vim_api_nvim_win_set_cursor(0, {
-                cur_item.row or 1,
-                cur_item.col or 0,
-            })
-        end)
+    if not set_position then
+        return
     end
+
+    pcall(function()
+        vim_api_nvim_win_set_cursor(0, {
+            cur_item.row or 1,
+            cur_item.col or 0,
+        })
+    end)
 end
 
 --- Toggle between current and last open index
@@ -342,8 +316,7 @@ marlin.next = function(opts)
     if index > marlin.num_indexes() then
         index = 1
     end
-    opts = opts or {}
-    marlin.open(index, opts)
+    marlin.open(index, opts or {})
 end
 
 --- Open previous index
@@ -358,8 +331,7 @@ marlin.prev = function(opts)
     if index < 1 then
         index = max
     end
-    opts = opts or {}
-    marlin.open(index, opts)
+    marlin.open(index, opts or {})
 end
 
 --- Open all indexes
@@ -382,7 +354,7 @@ end
 ---@usage `require('marlin').remove()`
 marlin.remove = function(filename)
     filename = filename or utils_get_cur_filename()
-    if utils.is_empty(filename) or not marlin.project_files["files"] then
+    if utils.is_empty(filename) then
         return
     end
 
@@ -407,12 +379,13 @@ marlin.load_project_files = function()
     local project_path = search_for_project_path(marlin.opts.patterns)
     marlin.project_path = project_path
     marlin.project_files = {}
+    marlin.project_files["files"] = {}
     local data = datafile_read_config(marlin.opts.datafile)
-    for key, value in pairs(data) do
-        if key == marlin.project_path then
-            marlin.project_files = value
-            break
-        end
+
+    local project_data = data[marlin.project_path]
+
+    if project_data then
+        marlin.project_files = project_data
     end
 end
 
