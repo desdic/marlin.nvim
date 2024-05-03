@@ -1,6 +1,6 @@
 local M = {}
 
-local uv = vim.loop
+local uv = vim.loop or vim.uv
 
 M.read_config = function(datafile)
     local fd = uv.fs_open(datafile, "r", 438)
