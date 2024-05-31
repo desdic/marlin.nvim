@@ -33,6 +33,18 @@ Example using the lazy plugin manager
 }
 ```
 
+If you want to restore the 'session' it can be done via autocmd like
+
+```lua
+vim.api.nvim_create_autocmd("VimEnter", {
+    group = vim.api.nvim_create_augroup("restore_marlin", { clear = true }),
+    callback = function()
+        require("marlin").open_all()
+    end,
+    nested = true,
+})
+```
+
 ### Default configuration
 
 ```lua
