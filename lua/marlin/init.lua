@@ -340,6 +340,8 @@ end
 ---
 ---@usage `require('marlin').open_all()`
 marlin.open_all = function(opts)
+    utils.delete_no_name_buffer()
+
     opts = opts or {}
     local marlinopen = marlin.open
     for idx, _ in ipairs(marlin.get_indexes()) do

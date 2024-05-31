@@ -44,4 +44,26 @@ M.load_buffer = function(filename)
     return bufnr, set_position
 end
 
+M.is_no_name_buf = function(buf)
+    local opts = { buf = buf }
+    return vim.api.nvim_buf_is_loaded(buf)
+        and vim.api.nvim_buf_get_name(buf) == ""
+        and vim.api.nvim_get_option_value("buflisted", opts)
+        and vim.api.nvim_get_option_value("buftype", opts) == ""
+        and vim.api.nvim_get_option_value("filetype", opts) == ""
+end
+
+M.delete_no_name_buffer = function()
+    local curbuffers = vim.api.nvim_list_bufs()
+
+    if #curbuffers == 1 then
+        local bufid = curbuffers[1]
+        if M.is_no_name_buf(bufid) then
+            vim.schedule(function()
+                vim.api.nvim_buf_delete(bufid, { force = true })
+            end)
+        end
+    end
+end
+
 return M
