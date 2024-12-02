@@ -202,6 +202,51 @@ Example using telescope
     end, { desc = "Telescope marlin" })
 ```
 
+Example using fzf-lua
+
+```lua
+    vim.keymap.set("n", "<Leader>fx", function()
+        local results = require("marlin").get_indexes()
+        local content = {}
+
+        require("fzf-lua").fzf_exec(function(fzf_cb)
+            for i, b in ipairs(results) do
+                local entry = i .. ":" .. b.filename .. ":" .. b.row .. ":" .. b.col
+                content[entry] = b
+                fzf_cb(entry)
+            end
+            fzf_cb()
+        end, {
+            prompt = "Marlin> ",
+            actions = {
+                ["ctrl-d"] = {
+                    fn = function(selected)
+                        require("marlin").remove(content[selected[1]].filename)
+                    end,
+                    reload = true,
+                    silent = true,
+                },
+                ["ctrl-k"] = {
+                    fn = function(selected)
+                        require("marlin").move_up(content[selected[1]].filename)
+                    end,
+                    reload = true,
+                    silent = false,
+                },
+                ["ctrl-j"] = {
+                    fn = function(selected)
+                        print(vim.inspect(selected))
+
+                        require("marlin").move_down(content[selected[1]].filename)
+                    end,
+                    reload = true,
+                    silent = false,
+                },
+            },
+        })
+    end, { desc = "fzf marlin" })
+```
+
 ### Why yet another ..
 
 When I first saw harpoon I was immediately hooked but I missed a few key features.
