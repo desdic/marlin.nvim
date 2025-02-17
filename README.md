@@ -270,14 +270,72 @@ Example using fzf-lua
     end, { desc = "fzf marlin" })
 ```
 
+Example using snacks
+
+```lua
+    vim.keymap.set("n", "<leader>fx", function()
+        local snacks = require("snacks")
+        local lookup = {}
+
+        local function get_choices()
+            local results = require("marlin").get_indexes()
+
+            local items = {}
+            lookup = {}
+            for idx, b in ipairs(results) do
+                local text = b.filename .. ":" .. b.row
+
+                table.insert(items, {
+                    formatted = text,
+                    file = b.filename,
+                    text = text,
+                    idx = idx,
+                    pos = { tonumber(b.row), 0 },
+                })
+
+                lookup[text] = b
+            end
+            return items
+        end
+
+        snacks.picker.pick({
+            source = "select",
+            finder = get_choices,
+            title = "Marlin",
+            layout = { preview = true },
+            actions = {
+                marlin_up = function(picker, item)
+                    require("marlin").move_up(lookup[item.text].filename)
+                    picker:find({ refresh = true })
+                end,
+                marlin_down = function(picker, item)
+                    require("marlin").move_down(lookup[item.text].filename)
+                    picker:find({ refresh = true })
+                end,
+                marlin_delete = function(picker, item)
+                    require("marlin").remove(lookup[item.text].filename)
+                    picker:find({ refresh = true })
+                end,
+            },
+            win = {
+                input = {
+                    keys = {
+                        ["<C-k>"] = { "marlin_up", mode = { "n", "i" }, desc = "Move marlin up" },
+                        ["<C-j>"] = { "marlin_down", mode = { "n", "i" }, desc = "Move marlin down" },
+                        ["<C-d>"] = { "marlin_delete", mode = { "n", "i" }, desc = "Marlin delete" },
+                    },
+                },
+            },
+        })
+    end, { desc = "marlin" })
+```
+
 ### Why yet another ..
 
 When I first saw harpoon I was immediately hooked but I missed a few key features.
 
  - I use splits and wanted to have it jump to the buffer and not replace the current one.
  - I wanted persistent jumps per project and not per directory.
-
-Like anyone else missing a feature I created a patch but it seems that many other did the same.
 
 ### Issues/Feature request
 
