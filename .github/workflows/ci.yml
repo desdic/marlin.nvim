@@ -11,9 +11,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            rev: nightly/nvim-linux64.tar.gz
+            url: https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz
+            manager: sudo apt-get
+            packages: -y make lua-check
           - os: ubuntu-24.04
-            rev: v0.10.0/nvim-linux64.tar.gz
+            url: https://github.com/neovim/neovim/releases/download/v0.10.4/nvim-linux-x86_64.tar.gz
+            manager: sudo apt-get
+            packages: -y make lua-check
     steps:
       - uses: actions/checkout@v4
       - run: date +%F > todays-date
@@ -27,7 +31,7 @@ jobs:
         run: |
           test -d _neovim || {
             mkdir -p _neovim
-            curl -sL "https://github.com/neovim/neovim/releases/download/${{ matrix.rev }}" | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
+            curl -sL "${{ matrix.url }}" | tar xzf - --strip-components=1 -C "${PWD}/_neovim"
           }
       - name: Dependencies
         run: |
