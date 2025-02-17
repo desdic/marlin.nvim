@@ -260,8 +260,6 @@ Example using fzf-lua
                 },
                 ["ctrl-j"] = {
                     fn = function(selected)
-                        print(vim.inspect(selected))
-
                         require("marlin").move_down(content[selected[1]].filename)
                     end,
                     reload = true,
