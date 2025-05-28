@@ -1,13 +1,7 @@
 local M = {}
 
-local vim_fn_bufnr = vim.fn.bufnr
-local vim_api_nvim_buf_is_loaded = vim.api.nvim_buf_is_loaded
-local vim_fn_bufload = vim.fn.bufload
-local vim_api_nvim_set_option_value = vim.api.nvim_set_option_value
-local vim_fn_expand = vim.fn.expand
-
 M.get_cur_filename = function()
-    return vim_fn_expand("%:p")
+    return vim.fn.expand("%:p")
 end
 
 M.get_project_path = function(patterns)
@@ -23,25 +17,24 @@ M.swap = function(table, index1, index2)
     return table
 end
 
+--- Return bufnr and if the position should be set
+---
+---@return number returns a bufnr
+---@return boolean if the position should be set or not
 M.load_buffer = function(filename)
-    local set_position = false
-    -- Check if file already in a buffer
-    local bufnr = vim_fn_bufnr(filename)
-    if bufnr == -1 then
-        -- else create a buffer for it
-        bufnr = vim_fn_bufnr(filename, true)
-        set_position = true
+    local abs_path = vim.fn.fnamemodify(filename, ":p")
+
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(bufnr) then
+            local name = vim.api.nvim_buf_get_name(bufnr)
+            if vim.fn.fnamemodify(name, ":p") == abs_path then
+                return bufnr, true
+            end
+        end
     end
 
-    -- if the file is not loaded, load it and make it listed (visible)
-    if not vim_api_nvim_buf_is_loaded(bufnr) then
-        vim_fn_bufload(bufnr)
-        vim_api_nvim_set_option_value("buflisted", true, {
-            buf = bufnr,
-        })
-    end
-
-    return bufnr, set_position
+    vim.cmd("edit " .. vim.fn.fnameescape(abs_path))
+    return vim.api.nvim_get_current_buf(), false
 end
 
 M.is_no_name_buf = function(buf)
