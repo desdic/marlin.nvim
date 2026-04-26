@@ -143,6 +143,9 @@ marlin.add = function(filename)
         if data["filename"] == filename then
             marlin.project_files["files"][idx]["col"] = col
             marlin.project_files["files"][idx]["row"] = row
+
+            vim.api.nvim_exec_autocmds("User", { pattern = "MarlinPost" })
+
             return
         end
     end
@@ -153,6 +156,8 @@ marlin.add = function(filename)
         col = col,
         row = row,
     })
+
+    vim.api.nvim_exec_autocmds("User", { pattern = "MarlinPost" })
 end
 
 --- Return index for current filename
@@ -356,6 +361,8 @@ marlin.remove = function(filename)
             break
         end
     end
+
+    vim.api.nvim_exec_autocmds("User", { pattern = "MarlinPost" })
 end
 
 --- Remove all indexes for current project
@@ -363,6 +370,7 @@ end
 ---@usage `require('marlin').remove_all()`
 marlin.remove_all = function()
     marlin.project_files["files"] = {}
+    vim.api.nvim_exec_autocmds("User", { pattern = "MarlinPost" })
 end
 
 --- load project files
